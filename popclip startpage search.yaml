@@ -1,0 +1,77 @@
+#popclip snippet to search Startpage in new tab in background
+name: Search Startpage
+icon: search S
+applescript: |
+    set startpageURL to "https://www.startpage.com/sp/search?query={popclip text}"
+    
+    tell application "System Events"
+        -- if your're searching from Safari, open a new tab and search
+        if (count of (every process whose frontmost is true and name is "Safari")) > 0 then
+        tell application "Safari"
+            activate
+            tell front window
+                set current tab to (make new tab with properties {URL:startpageURL})
+            end tell
+        end tell
+        
+        -- if your're searching from Google Chrome, open a new tab and search
+        else if (count of (every process whose frontmost is true and name is "Google Chrome")) > 0
+            tell application "Google Chrome"
+                activate
+                open location startpageURL
+            end tell
+            
+        -- if your're searching from any other app:
+        else
+            -- if Safari.app is already running
+            if (count of (every process whose name is "Safari")) > 0 then
+                set safariWindows to count (every window of process "Safari")
+                
+                -- if there are open Safari windows, check if they're minimised
+                -- if all windows are minimised, search using a new Safari window
+                -- if there is a window which is not minimised, activate this window, open a new tab and search
+                if safariWindows > 0 then
+                    tell application "Safari"
+                        set allWindowsMinimized to true
+                        repeat with aWindow in every window
+                            if miniaturized of aWindow is false then
+                                set allWindowsMinimized to false
+                                tell aWindow
+                                    activate
+                                    delay 0.3
+                                    tell application "Safari"
+                                        tell front window
+                                            activate
+                                            set current tab to (make new tab with properties {URL:startpageURL})
+                                        end tell
+                                    end tell
+                                end tell
+                                exit repeat
+                            end if
+                        end repeat
+                    end tell
+                      
+                    if allWindowsMinimized then
+                        tell application "Safari"
+                            activate
+                            make new document with properties {URL:startpageURL}
+                        end tell
+                    end if
+                
+                -- if there are no Safari windows, search using a new Safari window
+                else
+                    tell application "Safari"
+                        activate
+                        make new document with properties {URL:startpageURL}
+                    end tell
+                end if
+                
+            -- if Safari is not running, open Safari and search using a new window
+            else
+                tell application "Safari"
+                    activate
+                    make new document with properties {URL:startpageURL}
+                end tell
+            end if
+        end if  
+    end tell
